@@ -1,0 +1,34 @@
+services:
+  # START: example compose configs text
+  # config center service dependence mysql. If you don't need, you need to delete it.
+  ${mysql_server_name}:
+    restart: unless-stopped
+    image: ${mysql_server_name}:${mysql_version}
+    ports:
+      - ${mysql_port_out}:${mysql_port_in}
+    hostname: ${mysql_server_name}
+    volumes:
+      - ${volumes_base_path}/mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${mysql_root_passwd}
+  # END
+  ${cc_server_name}:
+    restart: unless-stopped
+    ports:
+      - ${cc_port_out}:${cc_port_in}
+    image: snow/${cc_server_name}:${cc_version}
+    hostname: ${cc_server_name}
+    volumes:
+      - ${volumes_base_path}/${cc_server_name}:${cc_resources_path_in}
+    depends_on:
+      - ${mysql_server_name}
+    environment:
+      API_PORT: ${cc_port_in}
+      DB_HOST: ${mysql_host}
+      DB_PORT: ${mysql_port_out}
+      DB_NAME: ${cc_db_name}
+      DB_USER: ${snow_db_user}
+      DB_PASS: ${snow_db_passwd}
+      SNOW_NAMESPACE: ${snow_namespace}
+      RESOURCES_PATH: ${cc_resources_path_in}
